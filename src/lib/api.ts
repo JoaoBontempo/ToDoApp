@@ -16,8 +16,8 @@ export interface ToDo {
   id: number;
   title: string;
   description: string;
-  createdAt: string;
-  finishedAt: string | null;
+  createdAt: Date;
+  finishedAt: Date | null | string;
   status: ToDoStatus;
 }
 
@@ -64,17 +64,13 @@ export async function createToDo(
 }
 
 export async function updateToDo(toDo: ToDo): Promise<void> {
-    console.log(JSON.stringify({
-      ...toDo,
-      finishedAt: toDo.finishedAt ?? toDo.status === ToDoStatus.FINISHED ? new Date().toISOString() : null,
-    }))
+  if(toDo.finishedAt === '')
+    toDo.finishedAt = null;
+
   const res = await fetch(`/api/todo`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      ...toDo,
-      finishedAt: toDo.finishedAt ?? toDo.status === ToDoStatus.FINISHED ? new Date().toISOString() : null,
-    }),
+    body: JSON.stringify(toDo),
   });
   await handleResponse<void>(res);
 }

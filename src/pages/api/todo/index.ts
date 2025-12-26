@@ -26,8 +26,6 @@ export default async function handler(
       body: ['POST', 'PATCH'].includes(method!) ? JSON.stringify(req.body) : undefined,
     });
 
-    // Log de sucesso
-    console.log(`[${method}] Resposta do backend: ${response.status} ${response.statusText}`);
     if (!response.ok) {
       return res.status(response.status).json(await response.json());
     }
@@ -39,7 +37,6 @@ export default async function handler(
     const data = await response.json();
     return res.status(200).json(data);
   } catch (error: any) {
-    // Melhoria principal: mensagem clara e útil
     console.error('Erro completo na conexão com o backend:', error);
 
     let friendlyMessage = 'Falha na conexão com o servidor de tarefas';

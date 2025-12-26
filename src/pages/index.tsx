@@ -13,7 +13,7 @@ export default function Home() {
     title: '', 
     description: '', 
     status: ToDoStatus.PENDING,
-    finishedAt: '' as string 
+    finishedAt: null as Date | null | string
   });
   const [view, setView] = useState<'list' | 'kanban'>('kanban');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,6 +23,37 @@ export default function Home() {
   useEffect(() => {
     fetchToDos();
   }, []);
+
+  function toDateTimeLocal(value : Date | string | null | undefined) : string {
+    if (!value) return '';
+
+    const d = new Date(value);
+
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+  }
+
+
+  function formatDate(date : Date | string, log : boolean = false) : string {
+    const formattedDate =
+      new Date(date).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).replace(',', '');
+
+      if(log)
+        console.log(formattedDate)
+      return formattedDate;
+  }
+
 
   async function fetchToDos() {
     try {
@@ -41,8 +72,10 @@ export default function Home() {
       title: formData.title.trim(),
       description: formData.description.trim(),
       status: editingToDo ? (formData.status as ToDoStatus) : ToDoStatus.PENDING,
-      createdAt: editingToDo ? editingToDo.createdAt : new Date().toISOString(),
-      finishedAt: editingToDo ? formData.finishedAt : null,
+      createdAt: editingToDo ? editingToDo.createdAt : new Date(),
+      finishedAt: editingToDo 
+        ? formData.finishedAt 
+        : null
     };
 
     if (!body.title) {
@@ -90,14 +123,14 @@ export default function Home() {
     setDeletingToDoId(null);
   }
 
-  function openModal(ToDo?: ToDo) {
-    if (ToDo) {
-      setEditingToDo(ToDo);
+  function openModal(toDo?: ToDo) {
+    if (toDo) {
+      setEditingToDo(toDo);
       setFormData({
-        title: ToDo.title,
-        description: ToDo.description,
-        status: ToDo.status,
-        finishedAt: ToDo.finishedAt || '',
+        title: toDo.title,
+        description: toDo.description,
+        status: toDo.status,
+        finishedAt: toDo.finishedAt,
       });
     } else {
       setEditingToDo(null);
@@ -105,7 +138,7 @@ export default function Home() {
         title: '',
         description: '',
         status: ToDoStatus.PENDING,
-        finishedAt: '',
+        finishedAt: null,
       });
     }
     setIsModalOpen(true);
@@ -119,11 +152,12 @@ export default function Home() {
   function closeModal() {
     setIsModalOpen(false);
     setEditingToDo(null);
-    setFormData({ title: '', description: '', status: ToDoStatus.PENDING, finishedAt: '' });
+    setFormData({ title: '', description: '', status: ToDoStatus.PENDING, finishedAt: null });
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
+    console.log(name, value);
     setFormData(prev => ({
       ...prev,
       [name]: name === 'status' ? Number(value) : value
@@ -145,10 +179,15 @@ export default function Home() {
 
     if (ToDo.status === newStatus) return;
 
+    const finishedAtDate = newStatus === ToDoStatus.FINISHED 
+      ? new Date()
+      : null;
     const updatedToDo = {
       ...ToDo,
       status: newStatus,
-      finishedAt: newStatus === ToDoStatus.FINISHED ? new Date().toISOString() : null,
+      finishedAt: ToDo.finishedAt == null || ToDo.finishedAt === ''
+        ? toDateTimeLocal(finishedAtDate)
+        : ToDo.finishedAt,
     };
 
     try {
@@ -214,8 +253,8 @@ export default function Home() {
                   <h3 className="font-bold text-lg text-gray-900 truncate">{ToDo.title}</h3>
                   <p className="text-sm text-gray-600 mt-1">{ToDo.description || 'Sem descrição'}</p>
                   <div className="mt-2 text-xs text-gray-500 space-y-1">
-                    <p><span className="font-medium">Criado:</span> {new Date(ToDo.createdAt).toLocaleString('pt-BR')}</p>
-                    <p><span className="font-medium">Finalizado:</span> {ToDo.finishedAt ? new Date(ToDo.finishedAt).toLocaleString('pt-BR') : 'N/A'}</p>
+                    <p><span className="font-medium">Criado:</span> {formatDate(ToDo.createdAt)}</p>
+                    {ToDo.finishedAt != null ? <p><span className="font-medium">Finalizado:</span> {ToDo.finishedAt ? formatDate(ToDo.finishedAt) : 'N/A'}</p> : <span></span>}
                     <p className={`font-medium ${getStatusColor(ToDo.status)}`}>
                       {ToDoStatusDescription[ToDo.status]}
                     </p>
@@ -295,8 +334,8 @@ export default function Home() {
                                   {ToDo.description || 'Sem descrição'}
                                 </p>
                                 <div className="text-xs text-gray-500 space-y-1">
-                                  <p><span className="font-medium">Criado:</span> {new Date(ToDo.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p>
-                                  <p><span className="font-medium">Finalizado:</span> {ToDo.finishedAt ? new Date(ToDo.finishedAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : 'N/A'}</p>
+                                  <p><span className="font-medium">Criado:</span> {formatDate(ToDo.createdAt)}</p>
+                                  {ToDo.finishedAt != null ? <p><span className="font-medium">Finalizado:</span> {ToDo.finishedAt ? formatDate(ToDo.finishedAt) : 'N/A'}</p> : <span></span>}
                                 </div>
                                 <div className={`mt-3 px-3 py-1 rounded-full text-xs font-semibold w-fit ${getStatusColor(ToDo.status)}`}>
                                   {ToDoStatusDescription[ToDo.status]}
@@ -378,7 +417,7 @@ export default function Home() {
                     id="finishedAt"
                     name="finishedAt"
                     type="datetime-local" 
-                    value={formData.finishedAt}
+                    value={formData.finishedAt != null ?  toDateTimeLocal(formData.finishedAt) : ''}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   />
