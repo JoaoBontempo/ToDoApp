@@ -1,9 +1,3 @@
-
----
-
-## 📌 **ToDoApp — README.md**
-
-```markdown
 # ToDoApp
 
 Aplicação frontend que consome a API ToDoApi para gerenciar tarefas.
