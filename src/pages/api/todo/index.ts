@@ -1,7 +1,7 @@
 // pages/api/todo/index.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-const BACKEND_URL = 'https://localhost:7085/todo';
+const BACKEND_URL = 'https://localhost:50326/todo';
 
 type ErrorResponse = {
   error: string;
